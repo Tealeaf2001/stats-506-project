@@ -1,0 +1,67 @@
+---
+title: "stats 506 project"
+author: "Qichang Wan"
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    embed-resources: true
+editor: visual
+---
+
+```{r}
+library(dplyr)
+library(readr)
+```
+
+```{r}
+# Load Medicare provider data
+medicare_data <- read_csv("MUP_PHY_R24_P07_V10_D22_Prov.csv")
+```
+
+```{r}
+# Filter for cardiologists
+cardiologists <- medicare_data %>%
+  filter(Rndrng_Prvdr_Type == "Cardiology")
+
+# Aggregate Medicare reimbursement rates by state
+state_medicare <- cardiologists %>%
+  group_by(Rndrng_Prvdr_State_Abrvtn) %>%
+  summarise(avg_reimbursement = mean(Tot_Mdcr_Stdzd_Amt, na.rm = TRUE))
+```
+
+```{r}
+tax_data <- read_csv("20zpallagi.csv")
+
+# Aggregate tax data by state
+state_tax <- tax_data %>%
+  group_by(STATE) %>%
+  summarise(
+    avg_income = mean(A00100, na.rm = TRUE), # Adjusted gross income
+    elderly_population = sum(ELDERLY, na.rm = TRUE) # Number of elderly
+  )
+```
+
+```{r}
+# Merge Medicare and tax data
+state_data <- merge(state_medicare, state_tax, by.x = "Rndrng_Prvdr_State_Abrvtn", by.y = "STATE")
+
+# Perform linear regression
+model <- lm(avg_reimbursement ~ avg_income + elderly_population, data = state_data)
+
+# Summary of the regression model
+summary(model)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
